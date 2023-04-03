@@ -149,9 +149,33 @@ class SkyController extends AbstractController
     /**
      * @Route("/uniqueStars", methods={"GET"}, name="unique_stars")
      */
-    public function uniqueStars()
+    public function uniqueStars(Request $request)
     {
-        return new JsonResponse(array('route' => 'uniqueStars'));
+        $foundIn = $request->query->get('foundIn');
+        $notFoundIn = $request->query->get('notFoundIn');
+        $atomsList = $request->query->get('atomsList');
+        $sortBy = $request->query->get('sortBy'); // size, temperature
+        $viewType = $request->query->get('viewType');
+
+        if (($foundIn === null
+                || $notFoundIn === null
+                || $atomsList === null
+                || $sortBy === null)
+            && ($sortBy === 'size' || $sortBy === 'temperature')
+        ) {
+            return new Response('', 400, ['content-type' => 'application/json']);
+        }
+
+        $em = $this->container->get('doctrine')->getManager();
+        $stars = $em->getRepository(Star::class)
+            ->findUniqueStars($foundIn, $notFoundIn, $atomsList, $sortBy);
+
+        $data = [];
+        foreach ($stars as $star) {
+            $data[] = json_decode($this->normalizer->normalize($star, $viewType));
+        }
+
+        return new JsonResponse($data);
     }
 
 

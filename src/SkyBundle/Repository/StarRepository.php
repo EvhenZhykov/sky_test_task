@@ -39,28 +39,48 @@ class StarRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Star[] Returns an array of Star objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('s')
-//            ->andWhere('s.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('s.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findUniqueStars (string $foundIn, string $notFoundIn, array $atomsList, string $sortBy)
+    {
+        $sortBy = $sortBy === 'size' ? 'radius' : $sortBy;
 
-//    public function findOneBySomeField($value): ?Star
-//    {
-//        return $this->createQueryBuilder('s')
-//            ->andWhere('s.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        $qb = $this->_em->createQueryBuilder();
+        $qb->select('s')
+        ->from(Star::class, 's');
+
+        $qb
+            ->andWhere('s.galaxy = :foundIn')
+            ->setParameter('foundIn', $foundIn);
+
+        foreach ($atomsList as $atom) {
+            $qb->andWhere($qb->expr()->like('s.atomsFound', $qb->expr()->literal('%' . $atom . '%')));
+        }
+
+        $subQb = $this->_em->createQueryBuilder();
+        $subQb->select('s2.atomsFound')
+            ->from(Star::class, 's2');
+
+        $subQb
+            ->andWhere('s2.galaxy = :notFoundIn');
+        $subQb->setParameter('notFoundIn', $notFoundIn);
+
+        foreach ($atomsList as $atom) {
+            $subQb->andWhere($subQb->expr()->like('s2.atomsFound', $subQb->expr()->literal('%' . $atom . '%')));
+        }
+
+        $subQuery = $subQb->getQuery()->getResult();
+
+        foreach ($subQuery as $test) {
+            foreach ($test['atomsFound'] as $t) {
+                if (in_array($t, $atomsList)) {
+                    $qb->andWhere($qb->expr()->notLike('s.atomsFound', $qb->expr()->literal('%' . $t . '%')));
+                }
+            }
+        }
+
+        return $qb
+            ->orderBy('s.'.$sortBy, 'ASC')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
 }
