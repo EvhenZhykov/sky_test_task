@@ -5,6 +5,7 @@ namespace App\SkyBundle\Repository;
 use App\SkyBundle\Entity\Star;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query\Expr;
 
 /**
  * @extends ServiceEntityRepository<Star>
@@ -69,10 +70,10 @@ class StarRepository extends ServiceEntityRepository
 
         $subQuery = $subQb->getQuery()->getResult();
 
-        foreach ($subQuery as $test) {
-            foreach ($test['atomsFound'] as $t) {
-                if (in_array($t, $atomsList)) {
-                    $qb->andWhere($qb->expr()->notLike('s.atomsFound', $qb->expr()->literal('%' . $t . '%')));
+        foreach ($subQuery as $atomsFound) {
+            foreach ($atomsFound['atomsFound'] as $atom) {
+                if (in_array($atom, $atomsList)) {
+                    $qb->andWhere($qb->expr()->notLike('s.atomsFound', $qb->expr()->literal('%' . $atom . '%')));
                 }
             }
         }

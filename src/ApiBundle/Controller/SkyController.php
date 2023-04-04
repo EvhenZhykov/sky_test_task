@@ -12,7 +12,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
+use App\ApiBundle\Model\Star as APIStar;
+use App\ApiBundle\Model\UniqueStar as APIUniqueStar;
 
 /**
  * Class SkyController
@@ -31,6 +32,58 @@ class SkyController extends AbstractController
 
     /**
      * @Route("/create", methods={"POST"}, name="create_star")
+     * @OA\Response(
+     *     response=200,
+     *     description="Create star",
+     *     @Model(type=APIStar::class)
+     * )
+     *
+     * @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *      @OA\Property(
+     *          property="name",
+     *          type="string",
+     *          description="Star name",
+     *          example="Star 1"
+     *      ),
+     *      @OA\Property(
+     *          property="galaxy",
+     *          type="string",
+     *          description="Galaxy name",
+     *          example="Galaxy 1"
+     *      ),
+     *      @OA\Property(
+     *          property="radius",
+     *          type="integer",
+     *          description="Star radius",
+     *          example="2342342"
+     *      ),
+     *      @OA\Property(
+     *          property="temperature",
+     *          type="integer",
+     *          description="Star temperature",
+     *          example="3456"
+     *      ),
+     *     @OA\Property(
+     *          property="rotation_frequency",
+     *          type="number",
+     *          description="Star rotation frequency",
+     *          example="0.44442224"
+     *      ),
+     *      @OA\Property(
+     *          type="array",
+     *          property="atoms_found",
+     *          description="Atoms found in star",
+     *          @OA\Items(
+     *             type="integer"
+     *          )
+     *       )
+     *    )
+     * )
+     *
+     * @Security(name="Sky-authorization")
+     * @OA\Tag(name="star")
      */
     public function create(Request $request)
     {
@@ -59,7 +112,7 @@ class SkyController extends AbstractController
         try {
             $em->persist($star);
             $em->flush();
-            $data = $this->normalizer->normalize($star, 'basic');
+            $data = $this->normalizer->normalize($star, 'custom');
             return new Response($data);
         } catch (\Exception $e) {
             return new Response($e->getMessage(), 409, ['content-type' => 'application/json']);
@@ -69,6 +122,15 @@ class SkyController extends AbstractController
 
     /**
      * @Route("/read/{starId}", requirements={"starId": "\d+"}, methods={"GET"}, name="get_star")
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Get star",
+     *     @Model(type=APIStar::class)
+     * )
+     *
+     * @Security(name="Sky-authorization")
+     * @OA\Tag(name="star")
     */
     public function read(int $starId)
     {
@@ -80,12 +142,65 @@ class SkyController extends AbstractController
             return new Response('', 404, ['content-type' => 'application/json']);
         }
 
-        $data = $this->normalizer->normalize($star, 'basic');
+        $data = $this->normalizer->normalize($star, 'custom');
         return new Response($data);
     }
 
     /**
      * @Route("/update/{starId}", requirements={"starId": "\d+"}, methods={"PATCH"}, name="update_star")
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Update star",
+     *     @Model(type=APIStar::class)
+     * )
+     *
+     * @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *      @OA\Property(
+     *          property="name",
+     *          type="string",
+     *          description="Star name",
+     *          example="Star 1"
+     *      ),
+     *      @OA\Property(
+     *          property="galaxy",
+     *          type="string",
+     *          description="Galaxy name",
+     *          example="Galaxy 1"
+     *      ),
+     *      @OA\Property(
+     *          property="radius",
+     *          type="integer",
+     *          description="Star radius",
+     *          example="2342342"
+     *      ),
+     *      @OA\Property(
+     *          property="temperature",
+     *          type="integer",
+     *          description="Star temperature",
+     *          example="3456"
+     *      ),
+     *     @OA\Property(
+     *          property="rotation_frequency",
+     *          type="number",
+     *          description="Star rotation frequency",
+     *          example="0.44442224"
+     *      ),
+     *      @OA\Property(
+     *          type="array",
+     *          property="atoms_found",
+     *          description="Atoms found in star",
+     *          @OA\Items(
+     *             type="integer"
+     *          )
+     *       )
+     *    )
+     * )
+     *
+     * @Security(name="Sky-authorization")
+     * @OA\Tag(name="star")
      */
     public function update(Request $request, int $starId)
     {
@@ -98,29 +213,29 @@ class SkyController extends AbstractController
             return new Response('', 404, ['content-type' => 'application/json']);
         }
 
-        if ($parameters['name'] !== null) {
+        if (isset($parameters['name'])) {
             $star->setName($parameters['name']);
         }
-        if ($parameters['galaxy'] !== null) {
+        if (isset($parameters['galaxy'])) {
             $star->setGalaxy($parameters['galaxy']);
         }
-        if ($parameters['radius'] !== null) {
+        if (isset($parameters['radius'])) {
             $star->setRadius($parameters['radius']);
         }
-        if ($parameters['temperature'] !== null) {
+        if (isset($parameters['temperature'])) {
             $star->setTemperature($parameters['temperature']);
         }
-        if ($parameters['rotation_frequency'] !== null) {
+        if (isset($parameters['rotation_frequency'])) {
             $star->setRotationFrequency($parameters['rotation_frequency']);
         }
-        if ($parameters['atoms_found'] !== null) {
+        if (isset($parameters['atoms_found'])) {
             $star->setAtomsFound($parameters['atoms_found']);
         }
 
         try {
             $em->persist($star);
             $em->flush();
-            $data = $this->normalizer->normalize($star, 'basic');
+            $data = $this->normalizer->normalize($star, 'custom');
             return new Response($data);
         } catch (\Exception $e) {
             return new Response($e->getMessage(), 409, ['content-type' => 'application/json']);
@@ -129,6 +244,14 @@ class SkyController extends AbstractController
 
     /**
      * @Route("/delete/{starId}", requirements={"starId": "\d+"}, methods={"DELETE"}, name="delete_star")
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Delete star"
+     * )
+     *
+     * @Security(name="Sky-authorization")
+     * @OA\Tag(name="star")
      */
     public function delete(int $starId)
     {
@@ -148,6 +271,52 @@ class SkyController extends AbstractController
 
     /**
      * @Route("/uniqueStars", methods={"GET"}, name="unique_stars")
+     *
+     * @OA\Response(
+     *     response=200,
+     *     description="Create star",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APIUniqueStar::class, groups={"full"}))
+     *     )
+     * )
+     *
+     * @OA\Parameter(
+     *     name="foundIn",
+     *     in="query",
+     *     description="Found in galaxy",
+     *     @OA\Schema(type="string")
+     * ),
+     * @OA\Parameter(
+     *     name="notFoundIn",
+     *     in="query",
+     *     description="Not found in galaxy",
+     *     @OA\Schema(type="string")
+     * ),
+     * @OA\Parameter(
+     *     name="sortBy",
+     *     in="query",
+     *     description="Sort by field",
+     *     @OA\Schema(type="string")
+     * ),
+     * @OA\Parameter(
+     *     name="viewType",
+     *     in="query",
+     *     description="View type for the response",
+     *     @OA\Schema(type="string")
+     * ),
+     * @OA\Parameter(
+     *     name="atomsList[]",
+     *     in="query",
+     *     description="Atoms list",
+     *     required=true,
+     *     @OA\Schema(
+     *         type="array",
+     *         @OA\Items(type="integer")
+     *     )
+     * )
+     * @Security(name="Sky-authorization")
+     * @OA\Tag(name="star")
      */
     public function uniqueStars(Request $request)
     {

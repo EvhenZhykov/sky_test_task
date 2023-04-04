@@ -25,108 +25,68 @@ class FillStarTableCommand extends Command
             ->setHelp('Run this command to fill star table with data.');
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-
         $output->writeln('Start');
-
-        $starsJsonData = '[
-            {
-              "name": "Sun",
-              "galaxy": "Milky Way",
-              "radius": 695700,
-              "temperature": 5500,
-              "rotation_frequency": 0.0000027,
-              "atoms_found": ["Hydrogen", "Helium", "Oxygen"]
-            },
-            {
-              "name": "Betelgeuse",
-              "galaxy": "Milky Way",
-              "radius": 887000000,
-              "temperature": 3500,
-              "rotation_frequency": 0.000000015,
-              "atoms_found": ["Hydrogen", "Helium", "Carbon"]
-            },
-            {
-              "name": "Antares",
-              "galaxy": "Milky Way",
-              "radius": 888000000,
-              "temperature": 3500,
-              "rotation_frequency": 0.000000014,
-              "atoms_found": ["Hydrogen", "Helium", "Carbon"]
-            },
-            {
-              "name": "Vega",
-              "galaxy": "Milky Way",
-              "radius": 2362400,
-              "temperature": 9520,
-              "rotation_frequency": 0.00000028,
-              "atoms_found": ["Hydrogen", "Helium", "Carbon"]
-            },
-            {
-              "name": "Sirius",
-              "galaxy": "Milky Way",
-              "radius": 1713600,
-              "temperature": 9940,
-              "rotation_frequency": 0.0000012,
-              "atoms_found": ["Hydrogen", "Helium", "Oxygen"]
-            },
-            {
-              "name": "Alpha Centauri A",
-              "galaxy": "Milky Way",
-              "radius": 1227000,
-              "temperature": 5500,
-              "rotation_frequency": 0.0000013,
-              "atoms_found": ["Hydrogen", "Helium", "Oxygen"]
-            },
-            {
-              "name": "Alpha Centauri B",
-              "galaxy": "Milky Way",
-              "radius": 865400,
-              "temperature": 5300,
-              "rotation_frequency": 0.0000019,
-              "atoms_found": ["Hydrogen", "Helium", "Oxygen"]
-            },
-            {
-              "name": "Andromeda",
-              "galaxy": "Andromeda Galaxy",
-              "radius": 282000000,
-              "temperature": 3900,
-              "rotation_frequency": 0.000000071,
-              "atoms_found": ["Hydrogen", "Helium", "Carbon"]
-            },
-            {
-              "name": "Triangulum",
-              "galaxy": "Triangulum Galaxy",
-              "radius": 33000,
-              "temperature": 7700,
-              "rotation_frequency": 0.0000033,
-              "atoms_found": ["Hydrogen", "Helium", "Nitrogen"]
-            },
-            {
-              "name": "Large Magellanic Cloud",
-              "galaxy": "Large Magellanic Cloud",
-              "radius": 17000,
-              "temperature": 6500,
-              "rotation_frequency": 0.0000018,
-              "atoms_found": ["Hydrogen", "Helium", "Oxygen"]
-            }
-        ]';
 
         $em = $this->container->get('doctrine.orm.entity_manager');
 
-        $starsData = json_decode($starsJsonData, true);
+        $galaxies = [
+            'Galaxy A',
+            'Galaxy B',
+            'Galaxy C',
+            'Galaxy D',
+            'Galaxy F'
+        ];
 
-        foreach ($starsData as $starData) {
-            $star = new Star;
-            $star->setName($starData['name']);
-            $star->setGalaxy($starData['galaxy']);
-            $star->setRadius($starData['radius']);
-            $star->setTemperature($starData['temperature']);
-            $star->setRotationFrequency($starData['rotation_frequency']);
-            $star->setAtomsFound($starData['atoms_found']);
+        $galaxiesAtoms = [];
+        foreach ($galaxies as $galaxy) {
+            for ($i = 0; $i < 50; $i++) {
+                if ($galaxy === 'Galaxy A') {
+                    $galaxiesAtoms[$galaxy][] = random_int(1, 40);
+                }
+                if ($galaxy === 'Galaxy B') {
+                    $galaxiesAtoms[$galaxy][] = random_int(40, 100);
+                }
+                if ($galaxy === 'Galaxy C') {
+                    $galaxiesAtoms[$galaxy][] = random_int(100, 172);
+                }
+                if ($galaxy === 'Galaxy D') {
+                    $galaxiesAtoms[$galaxy][] = random_int(1, 40);
+                }
+                if ($galaxy === 'Galaxy F') {
+                    $galaxiesAtoms[$galaxy][] = random_int(40, 100);
+                }
+            }
+        }
 
-            $em->persist($star);
+        $galaxiesStars = [];
+        foreach ($galaxies as $galaxy) {
+            for ($i = 1; $i <= 1000; $i++) {
+                $galaxiesStars[$galaxy][] = 'Star ' . $i . ' of ' . $galaxy;
+            }
+        }
+
+        foreach ($galaxiesStars as $galaxy => $stars) {
+            foreach ($stars as $galaxyStar) {
+                $star = new Star;
+                $star->setName($galaxyStar);
+                $star->setGalaxy($galaxy);
+                $star->setRadius(random_int(10000, 100000000));
+                $star->setTemperature(random_int(3000, 10000));
+                $star->setRotationFrequency(random_int(1, 100));
+                $randKeys = array_rand($galaxiesAtoms[$galaxy], 10);
+                $atomsFound = [];
+                foreach ($randKeys as $key) {
+                    $atomsFound[] = $galaxiesAtoms[$galaxy][$key];
+                }
+                $star->setAtomsFound($atomsFound);
+
+                $em->persist($star);
+            }
         }
 
         $em->flush();
