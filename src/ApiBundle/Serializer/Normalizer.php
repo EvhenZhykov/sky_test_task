@@ -6,8 +6,14 @@ use App\SkyBundle\Entity\Star;
 use App\ApiBundle\Model\UniqueStar as APIUniqueStar;
 use App\ApiBundle\Model\Star as APIStar;
 
+
 class Normalizer
 {
+    /**
+     * @param Star $star
+     * @param string|null $tag
+     * @return false|string|void
+     */
     public function normalize(Star $star, ?string $tag = 'basic')
     {
         switch ($tag) {

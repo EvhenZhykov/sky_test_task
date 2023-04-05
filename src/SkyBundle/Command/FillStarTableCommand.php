@@ -9,15 +9,27 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * FillStarTableCommand
+ */
 class FillStarTableCommand extends Command
 {
+    /**
+     * @var ContainerInterface
+     */
     protected $container;
 
+    /**
+     * @param ContainerInterface $container
+     */
     public function __construct(ContainerInterface $container) {
         $this->container = $container;
         parent::__construct();
     }
 
+    /**
+     * @return void
+     */
     protected function configure(): void
     {
         $this->setName('fill-star-table')

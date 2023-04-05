@@ -11,6 +11,9 @@ class IpAddressSubscriber implements EventSubscriberInterface
     private $ipWhitelist;
     private $methodsToCheck;
 
+    /**
+     * @param array $ipWhitelist
+     */
     public function __construct(array $ipWhitelist)
     {
         $this->ipWhitelist = $ipWhitelist;
@@ -22,11 +25,18 @@ class IpAddressSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @return string[]
+     */
     public static function getSubscribedEvents(): array
     {
         return [RequestEvent::class => 'onKernelRequest'];
     }
 
+    /**
+     * @param RequestEvent $event
+     * @return void
+     */
     public function onKernelRequest(RequestEvent $event): void
     {
         if (!$event->isMainRequest()) {

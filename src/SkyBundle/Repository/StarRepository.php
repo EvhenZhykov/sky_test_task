@@ -39,6 +39,13 @@ class StarRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * @param string $foundIn
+     * @param string $notFoundIn
+     * @param array $atoms
+     * @param string $sortBy
+     * @return array|float|int|mixed|string
+     */
     public function findUniqueStars(string $foundIn, string $notFoundIn, array $atoms, string $sortBy)
     {
         $sortBy = $sortBy === 'size' ? 'radius' : $sortBy;

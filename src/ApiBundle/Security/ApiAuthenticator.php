@@ -14,16 +14,29 @@ use Symfony\Component\HttpFoundation\Response;
 class ApiAuthenticator extends AbstractGuardAuthenticator
 {
 
+    /**
+     * @param Request $request
+     * @return bool
+     */
     public function supports(Request $request): bool
     {
         return $request->headers->has('Sky-authorization') || !$request->headers->has('Sky-authorization');
     }
 
+    /**
+     * @param Request $request
+     * @return bool
+     */
     public function getCredentials(Request $request)
     {
         return $request->headers->get('Sky-authorization') === 'main300';
     }
 
+    /**
+     * @param $credentials
+     * @param UserProviderInterface $userProvider
+     * @return UserInterface|null
+     */
     public function getUser($credentials, UserProviderInterface $userProvider): ?UserInterface
     {
         if (false === $credentials) {
@@ -43,16 +56,32 @@ class ApiAuthenticator extends AbstractGuardAuthenticator
 
     }
 
+    /**
+     * @param $credentials
+     * @param UserInterface $user
+     * @return bool
+     */
     public function checkCredentials($credentials, UserInterface $user): bool
     {
         return true;
     }
 
+    /**
+     * @param Request $request
+     * @param $token
+     * @param string $providerKey
+     * @return Response|null
+     */
     public function onAuthenticationSuccess(Request $request, $token, string $providerKey): ?Response
     {
         return null;
     }
 
+    /**
+     * @param Request $request
+     * @param AuthenticationException $exception
+     * @return Response|null
+     */
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         $data = [
@@ -62,6 +91,11 @@ class ApiAuthenticator extends AbstractGuardAuthenticator
         return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
+    /**
+     * @param Request $request
+     * @param AuthenticationException|null $authException
+     * @return Response
+     */
     public function start(Request $request, AuthenticationException $authException = null): Response
     {
         $data = [
@@ -71,6 +105,9 @@ class ApiAuthenticator extends AbstractGuardAuthenticator
         return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
     }
 
+    /**
+     * @return bool
+     */
     public function supportsRememberMe(): bool
     {
         return false;

@@ -26,6 +26,9 @@ class SkyController extends AbstractController
 
     private $normalizer;
 
+    /**
+     * @param Normalizer $normalizer
+     */
     public function __construct(Normalizer $normalizer)
     {
         $this->normalizer = $normalizer;

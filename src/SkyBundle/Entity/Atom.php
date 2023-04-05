@@ -34,32 +34,47 @@ class Atom
         $this->stars = new ArrayCollection();
     }
 
-    public function getId()
+    /**
+     * @return int
+     */
+    public function getId(): int
     {
         return $this->id;
     }
 
 
-    public function setValue($value)
+    /**
+     * @param $value
+     * @return Atom
+     */
+    public function setValue($value): Atom
     {
         $this->value = $value;
-
         return $this;
     }
 
 
-    public function getValue()
+    /**
+     * @return string
+     */
+    public function getValue(): string
     {
         return $this->value;
     }
 
-
+    /**
+     * @return Collection
+     */
     public function getStars(): Collection
     {
         return $this->stars;
     }
 
-    public function addStar(Star $star): self
+    /**
+     * @param Star $star
+     * @return Atom
+     */
+    public function addStar(Star $star): Atom
     {
         if (!$this->stars->contains($star)) {
             $this->stars[] = $star;
@@ -67,7 +82,12 @@ class Atom
         }
         return $this;
     }
-    public function removeStar(Star $star): self
+
+    /**
+     * @param Star $star
+     * @return Atom
+     */
+    public function removeStar(Star $star): Atom
     {
         if ($this->stars->contains($star)) {
             $this->stars->removeElement($star);
