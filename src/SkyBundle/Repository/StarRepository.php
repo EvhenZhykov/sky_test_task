@@ -5,7 +5,6 @@ namespace App\SkyBundle\Repository;
 use App\SkyBundle\Entity\Star;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\ORM\Query\Expr;
 
 /**
  * @extends ServiceEntityRepository<Star>
@@ -40,48 +39,58 @@ class StarRepository extends ServiceEntityRepository
         }
     }
 
-    public function findUniqueStars (string $foundIn, string $notFoundIn, array $atomsList, string $sortBy)
+    public function findUniqueStars(string $foundIn, string $notFoundIn, array $atoms, string $sortBy)
     {
         $sortBy = $sortBy === 'size' ? 'radius' : $sortBy;
 
-        $qb = $this->_em->createQueryBuilder();
-        $qb->select('s')
-        ->from(Star::class, 's');
+        $qbNotFoundIn = $this->_em->createQueryBuilder();
+        $qbNotFoundIn->select('s')
+            ->from(Star::class, 's')
+            ->leftJoin('s.atoms', 'a')
+            ->where('s.galaxy = :notFoundIn')
+            ->setParameter('notFoundIn', $notFoundIn)
+        ;
 
-        $qb
-            ->andWhere('s.galaxy = :foundIn')
-            ->setParameter('foundIn', $foundIn);
-
-        foreach ($atomsList as $atom) {
-            $qb->andWhere($qb->expr()->like('s.atomsFound', $qb->expr()->literal('%' . $atom . '%')));
-        }
-
-        $subQb = $this->_em->createQueryBuilder();
-        $subQb->select('s2.atomsFound')
-            ->from(Star::class, 's2');
-
-        $subQb
-            ->andWhere('s2.galaxy = :notFoundIn');
-        $subQb->setParameter('notFoundIn', $notFoundIn);
-
-        foreach ($atomsList as $atom) {
-            $subQb->andWhere($subQb->expr()->like('s2.atomsFound', $subQb->expr()->literal('%' . $atom . '%')));
-        }
-
-        $subQuery = $subQb->getQuery()->getResult();
-
-        foreach ($subQuery as $atomsFound) {
-            foreach ($atomsFound['atomsFound'] as $atom) {
-                if (in_array($atom, $atomsList)) {
-                    $qb->andWhere($qb->expr()->notLike('s.atomsFound', $qb->expr()->literal('%' . $atom . '%')));
+        $result = $qbNotFoundIn->getQuery()->getResult();
+        foreach ($result as $key => $star) {
+            $atomsValue = [];
+            foreach ($star->getAtoms()->toArray() as $atom) {
+                $atomsValue[] = $atom->getValue();
+            }
+            foreach ($atoms as $atom) {
+                if (!in_array($atom, $atomsValue)) {
+                    unset($result[$key]);
                 }
             }
         }
 
-        return $qb
-            ->orderBy('s.'.$sortBy, 'ASC')
-            ->getQuery()
-            ->getResult()
+        if (!empty($result)) {
+            // if atoms from $atoms are found on another galaxy, return an empty array
+            return [];
+        }
+
+        $qb = $this->_em->createQueryBuilder();
+        $qb->select('s')
+            ->from(Star::class, 's')
+            ->leftJoin('s.atoms', 'a')
+            ->where('s.galaxy = :foundIn')
+            ->setParameter('foundIn', $foundIn)
         ;
+
+        $result = $qb->orderBy('s.' . $sortBy, 'ASC')->getQuery()->getResult();
+
+        foreach ($result as $key => $star) {
+            $atomsValue = [];
+            foreach ($star->getAtoms()->toArray() as $atom) {
+                $atomsValue[] = $atom->getValue();
+            }
+            foreach ($atoms as $atom) {
+                if (!in_array($atom, $atomsValue)) {
+                    unset($result[$key]);
+                }
+            }
+        }
+
+        return $result;
     }
 }

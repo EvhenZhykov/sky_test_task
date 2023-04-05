@@ -3,10 +3,11 @@
 namespace App\SkyBundle\Entity;
 
 use App\SkyBundle\Repository\StarRepository;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * @ORM\Entity()
  * @ORM\Entity(repositoryClass=StarRepository::class)
  * @ORM\Table(name="star",
  *     uniqueConstraints={@ORM\UniqueConstraint(name="unique_star", columns={"name", "galaxy"})})
@@ -46,9 +47,14 @@ class Star
     private $rotationFrequency;
 
     /**
-     * @ORM\Column(type="array")
+     * @ORM\ManyToMany(targetEntity="App\SkyBundle\Entity\Atom", inversedBy="stars")
      */
-    private $atomsFound;
+    private $atoms;
+
+    public function __construct()
+    {
+        $this->atoms = new ArrayCollection();
+    }
 
     /**
      * @return int
@@ -149,22 +155,26 @@ class Star
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function getAtomsFound()
+    public function getAtoms(): Collection
     {
-        return $this->atomsFound;
+        return $this->atoms;
     }
-
-    /**
-     * @param array $atomsFound
-     * @return Star
-     */
-    public function setAtomsFound(array $atomsFound): Star
+    public function addAtom(Atom $atom): self
     {
-        $this->atomsFound = $atomsFound;
+        if (!$this->atoms->contains($atom)) {
+            $this->atoms[] = $atom;
+            $atom->addStar($this);
+        }
         return $this;
     }
+    public function removeAtom(Atom $atom): self
+    {
+        if ($this->atoms->contains($atom)) {
+            $this->atoms->removeElement($atom);
+            $atom->removeStar($this);
+        }
+        return $this;
+    }
+
 
 }

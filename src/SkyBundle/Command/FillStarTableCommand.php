@@ -2,8 +2,8 @@
 
 namespace App\SkyBundle\Command;
 
+use App\SkyBundle\Entity\Atom;
 use App\SkyBundle\Entity\Star;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -37,28 +37,20 @@ class FillStarTableCommand extends Command
         $galaxies = [
             'Galaxy A',
             'Galaxy B',
-            'Galaxy C',
-            'Galaxy D',
-            'Galaxy F'
+            'Galaxy C'
         ];
 
         $galaxiesAtoms = [];
         foreach ($galaxies as $galaxy) {
             for ($i = 0; $i < 50; $i++) {
                 if ($galaxy === 'Galaxy A') {
-                    $galaxiesAtoms[$galaxy][] = random_int(1, 40);
+                    $galaxiesAtoms[$galaxy][] = random_int(1, 50);
                 }
                 if ($galaxy === 'Galaxy B') {
-                    $galaxiesAtoms[$galaxy][] = random_int(40, 100);
+                    $galaxiesAtoms[$galaxy][] = random_int(30, 100);
                 }
                 if ($galaxy === 'Galaxy C') {
-                    $galaxiesAtoms[$galaxy][] = random_int(100, 172);
-                }
-                if ($galaxy === 'Galaxy D') {
-                    $galaxiesAtoms[$galaxy][] = random_int(1, 40);
-                }
-                if ($galaxy === 'Galaxy F') {
-                    $galaxiesAtoms[$galaxy][] = random_int(40, 100);
+                    $galaxiesAtoms[$galaxy][] = random_int(80, 172);
                 }
             }
         }
@@ -79,17 +71,18 @@ class FillStarTableCommand extends Command
                 $star->setTemperature(random_int(3000, 10000));
                 $star->setRotationFrequency(random_int(1, 100));
                 $randKeys = array_rand($galaxiesAtoms[$galaxy], 10);
-                $atomsFound = [];
                 foreach ($randKeys as $key) {
-                    $atomsFound[] = $galaxiesAtoms[$galaxy][$key];
+                    $atom = new Atom;
+                    $atom->setValue($galaxiesAtoms[$galaxy][$key]);
+                    $atom->addStar($star);
+                    $em->persist($atom);
                 }
-                $star->setAtomsFound($atomsFound);
 
                 $em->persist($star);
+                $em->flush();
+                $em->clear();
             }
         }
-
-        $em->flush();
 
         $output->writeln('End');
 

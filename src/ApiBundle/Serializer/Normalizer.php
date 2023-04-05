@@ -29,7 +29,10 @@ class Normalizer
                 $apiStar->radius = $star->getRadius();
                 $apiStar->temperature = $star->getTemperature();
                 $apiStar->rotationFrequency = $star->getRotationFrequency();
-                $apiStar->atomsFound = $star->getAtomsFound();
+                $apiStar->atomsFound = [];
+                foreach ($star->getAtoms()->toArray() as $atom) {
+                    $apiStar->atomsFound[] = $atom->getValue();
+                }
                 return json_encode($apiStar);
         }
     }

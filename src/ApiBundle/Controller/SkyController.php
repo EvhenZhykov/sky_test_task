@@ -3,6 +3,7 @@
 namespace App\ApiBundle\Controller;
 
 use App\ApiBundle\Serializer\Normalizer;
+use App\SkyBundle\Entity\Atom;
 use App\SkyBundle\Entity\Star;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Security;
@@ -90,12 +91,12 @@ class SkyController extends AbstractController
         $parameters = json_decode($request->getContent(), true);
         $em = $this->container->get('doctrine')->getManager();
 
-        if ($parameters['name'] === null
-            || $parameters['galaxy'] === null
-            || $parameters['radius'] === null
-            || $parameters['temperature'] === null
-            || $parameters['rotation_frequency'] === null
-            || $parameters['atoms_found'] === null
+        if (!isset($parameters['name'])
+            || !isset($parameters['galaxy'])
+            || !isset($parameters['radius'])
+            || !isset($parameters['temperature'])
+            || !isset($parameters['rotation_frequency'])
+            || (!isset($parameters['atoms_found']) || !is_array($parameters['atoms_found']))
         ) {
             return new Response('', 400, ['content-type' => 'application/json']);
         }
@@ -107,7 +108,13 @@ class SkyController extends AbstractController
         $star->setRadius($parameters['radius']);
         $star->setTemperature($parameters['temperature']);
         $star->setRotationFrequency($parameters['rotation_frequency']);
-        $star->setAtomsFound($parameters['atoms_found']);
+
+        foreach ($parameters['atoms_found'] as $atomValue) {
+            $atom = new Atom;
+            $atom->setValue($atomValue);
+            $atom->addStar($star);
+            $em->persist($atom);
+        }
 
         try {
             $em->persist($star);
@@ -206,6 +213,7 @@ class SkyController extends AbstractController
     {
         $parameters = json_decode($request->getContent(), true);
         $em = $this->container->get('doctrine')->getManager();
+        /** @var Star $star */
         $star = $em->getRepository(Star::class)
             ->findOneById($starId);
 
@@ -229,7 +237,18 @@ class SkyController extends AbstractController
             $star->setRotationFrequency($parameters['rotation_frequency']);
         }
         if (isset($parameters['atoms_found'])) {
-            $star->setAtomsFound($parameters['atoms_found']);
+
+            $atoms = $star->getAtoms();
+            foreach ($atoms as $atom) {
+                $star->removeAtom($atom);
+            }
+
+            foreach ($parameters['atoms_found'] as $atomValue) {
+                $atom = new Atom;
+                $atom->setValue($atomValue);
+                $atom->addStar($star);
+                $em->persist($atom);
+            }
         }
 
         try {
@@ -328,16 +347,20 @@ class SkyController extends AbstractController
 
         if (($foundIn === null
                 || $notFoundIn === null
-                || $atomsList === null
+                || !is_array($atomsList)
                 || $sortBy === null)
             && ($sortBy === 'size' || $sortBy === 'temperature')
         ) {
             return new Response('', 400, ['content-type' => 'application/json']);
         }
 
+        $atoms = array_map(function ($val){
+            return (int)$val;
+        }, $atomsList);
+
         $em = $this->container->get('doctrine')->getManager();
         $stars = $em->getRepository(Star::class)
-            ->findUniqueStars($foundIn, $notFoundIn, $atomsList, $sortBy);
+            ->findUniqueStars($foundIn, $notFoundIn, $atoms, $sortBy);
 
         $data = [];
         foreach ($stars as $star) {
