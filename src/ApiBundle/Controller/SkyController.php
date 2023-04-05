@@ -296,7 +296,7 @@ class SkyController extends AbstractController
      *
      * @OA\Response(
      *     response=200,
-     *     description="Create star",
+     *     description="Get unique stars",
      *     @OA\JsonContent(
      *        type="array",
      *        @OA\Items(ref=@Model(type=APIUniqueStar::class, groups={"full"}))
